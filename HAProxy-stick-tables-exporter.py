@@ -376,7 +376,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
             description="HAProxy stick table exporter"
         )
-    parser.add_argument('-h', '--metrics-host',default='::')
+    parser.add_argument('-a', '--metrics-host',default='::')
     parser.add_argument('-p', '--metrics-port', type=int, default=9091)
     parser.add_argument('-s', '--stats-socket')
     parser.add_argument('-c', '--config', default='/etc/haproxy/haproxy.cfg')
@@ -384,7 +384,7 @@ if __name__ == "__main__":
 
     logging.info(
         'Starting HAProxy sticky table exporter on {}:{}'.format(
-            args.metrics_host
+            args.metrics_host,
             args.metrics_port
             )
         )
@@ -401,7 +401,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     REGISTRY.register(haproxyCollector(stats_socket, config_path))
-    start_http_server(addr=args.metrics_host port=args.metrics_port)
+    start_http_server(addr=args.metrics_host, port=args.metrics_port)
     while True:
         try:
             time.sleep(1)
