@@ -21,8 +21,39 @@ class haproxyCollector(object):
         for table in stick_tables:
             # check first entry of the table if it contains the metric
             if len(stick_tables[table]) > 0:
-                # detect _rate columns and tag them with their period
-                if metric.endswith('_rate'):
+                # detect gpc rate columns and tag with their index and period
+                if metric.startswith('gpc') and metric.endswith('_rate'):
+                    for entry in stick_tables[table]:
+                        for idx in range(100):
+                            gpc_key = 'gpc' + str(idx) + '_rate'
+                            rates = []
+                            for column in stick_tables[table][0].keys():
+                                if column.startswith(gpc_key):
+                                    p = re.compile(r'\w+\((?P<period>\d+)\)')
+                                    m = p.search(column)
+                                    rates.append(m.group('period'))
+                            for rate in rates:
+                                for entry in stick_tables[table]:
+                                    metric_collector['family'].add_metric(
+                                        [table, entry['key'], rate, self.region, str(idx)],
+                                        metric_collector['valuetype'](
+                                            entry["%s(%s)" % (gpc_key, rate)]
+                                            )
+                                        )
+                # detect gpc columns and tag with their index
+                elif metric.startswith('gpc'):
+                    for entry in stick_tables[table]:
+                        for idx in range(100):
+                            gpc_key = 'gpc' + str(idx)
+                            if gpc_key in stick_tables[table][0].keys():
+                                metric_collector['family'].add_metric(
+                                    [table, entry['key'], self.region, str(idx)],
+                                    metric_collector['valuetype'](
+                                        entry[gpc_key]
+                                        )
+                                    )
+                # detect non gpc _rate columns and tag them with their period
+                elif metric.endswith('_rate'):
                     rates = []
                     for column in stick_tables[table][0].keys():
                         if column.startswith(metric):
@@ -37,6 +68,7 @@ class haproxyCollector(object):
                                     entry["%s(%s)" % (metric, rate)]
                                     )
                                 )
+                # collect and tag all other metrics by name
                 elif metric in stick_tables[table][0].keys():
                     for entry in stick_tables[table]:
                         metric_collector['family'].add_metric(
@@ -75,15 +107,15 @@ class haproxyCollector(object):
                     'HAProxy stick table key use',
                     labels=["table", "key", "region"]),
                     'valuetype': int}
-            metrics['gpc0'] = {'family': GaugeMetricFamily(
-                    'haproxy_stick_table_key_gpc0',
-                    'Haproxy stick table key general purpose counter 0',
-                    labels=["table", "key", "region"]),
+            metrics['gpc'] = {'family': GaugeMetricFamily(
+                    'haproxy_stick_table_key_gpc',
+                    'Haproxy stick table key general purpose counter',
+                    labels=["table", "key", "region", "index"]),
                     'valuetype': int}
-            metrics['gpc0_rate'] = {'family': GaugeMetricFamily(
-                    'haproxy_stick_table_key_gpc0_rate',
-                    'Haproxy stick table key general purpose counter 0 rate',
-                    labels=["table", "key", "period", "region"]),
+            metrics['gpc_rate'] = {'family': GaugeMetricFamily(
+                    'haproxy_stick_table_key_gpc_rate',
+                    'Haproxy stick table key general purpose counter rate',
+                    labels=["table", "key", "period", "region", "index"]),
                     'valuetype': int}
             metrics['conn_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_conn_total',
