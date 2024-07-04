@@ -53,7 +53,7 @@ class haproxyCollector(object):
                                 metric_collector['family'].add_metric(
                                     [table, entry['key'], self.region, idx],
                                     metric_collector['valuetype'](
-                                        entry[metric]
+                                        entry[gpc_key]
                                         )
                                     )
             
