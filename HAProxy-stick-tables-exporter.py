@@ -21,18 +21,6 @@ class haproxyCollector(object):
         for table in stick_tables:
             # check first entry of the table if it contains the metric
             if len(stick_tables[table]) > 0:
-                # detect gpc columns and tag with their index
-                if metric.startswith('gpc'):
-                    for entry in stick_tables[table]:
-                        for idx in range(100):
-                            gpc_key = 'gpc' + str(idx)
-                            if gpc_key in stick_tables[table][0].keys():
-                                metric_collector['family'].add_metric(
-                                    [table, entry['key'], self.region, str(idx)],
-                                    metric_collector['valuetype'](
-                                        entry[gpc_key]
-                                        )
-                                    )
                 # detect gpc rate columns and tag with their index and period
                 if metric.startswith('gpc') and metric.endswith('_rate'):
                     for entry in stick_tables[table]:
@@ -52,6 +40,18 @@ class haproxyCollector(object):
                                             entry["%s(%s)" % (gpc_key, rate)]
                                             )
                                         )
+                # detect gpc columns and tag with their index
+                elif metric.startswith('gpc'):
+                    for entry in stick_tables[table]:
+                        for idx in range(100):
+                            gpc_key = 'gpc' + str(idx)
+                            if gpc_key in stick_tables[table][0].keys():
+                                metric_collector['family'].add_metric(
+                                    [table, entry['key'], self.region, str(idx)],
+                                    metric_collector['valuetype'](
+                                        entry[gpc_key]
+                                        )
+                                    )
                 # detect non gpc _rate columns and tag them with their period
                 elif metric.endswith('_rate'):
                     rates = []
