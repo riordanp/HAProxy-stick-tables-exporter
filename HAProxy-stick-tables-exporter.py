@@ -51,7 +51,7 @@ class haproxyCollector(object):
                             gpc_key = 'gpc' + str(idx)
                             if gpc_key in stick_tables[table][0].keys():
                                 metric_collector['family'].add_metric(
-                                    [table, entry['key'], self.region, idx],
+                                    [table, entry['key'], self.region, str(idx)],
                                     metric_collector['valuetype'](
                                         entry[gpc_key]
                                         )
