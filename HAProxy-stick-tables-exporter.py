@@ -11,10 +11,11 @@ from prometheus_client.core import REGISTRY
 
 
 class haproxyCollector(object):
-    def __init__(self, stats_socket, config_path, region):
+    def __init__(self, stats_socket, config_path, region, app):
         self.stats_socket = stats_socket
         self.config_path = config_path
         self.region = region
+        self.app = app
         self.ha_stats = haproxy_Stats(self.stats_socket, self.config_path)
 
     def collect_metric(self, metric, metric_collector, stick_tables):
@@ -35,7 +36,7 @@ class haproxyCollector(object):
                             for rate in rates:
                                 for entry in stick_tables[table]:
                                     metric_collector['family'].add_metric(
-                                        [table, entry['key'], rate, self.region, str(idx)],
+                                        [table, entry['key'], rate, self.region, self.app, str(idx)],
                                         metric_collector['valuetype'](
                                             entry["%s(%s)" % (gpc_key, rate)]
                                             )
@@ -47,7 +48,7 @@ class haproxyCollector(object):
                             gpc_key = 'gpc' + str(idx)
                             if gpc_key in stick_tables[table][0].keys():
                                 metric_collector['family'].add_metric(
-                                    [table, entry['key'], self.region, str(idx)],
+                                    [table, entry['key'], self.region, self.app, str(idx)],
                                     metric_collector['valuetype'](
                                         entry[gpc_key]
                                         )
@@ -63,7 +64,7 @@ class haproxyCollector(object):
                     for rate in rates:
                         for entry in stick_tables[table]:
                             metric_collector['family'].add_metric(
-                                [table, entry['key'], rate, self.region],
+                                [table, entry['key'], rate, self.region, self.app],
                                 metric_collector['valuetype'](
                                     entry["%s(%s)" % (metric, rate)]
                                     )
@@ -72,7 +73,7 @@ class haproxyCollector(object):
                 elif metric in stick_tables[table][0].keys():
                     for entry in stick_tables[table]:
                         metric_collector['family'].add_metric(
-                            [table, entry['key'], self.region],
+                            [table, entry['key'], self.region, self.app],
                             metric_collector['valuetype'](
                                 entry[metric]
                                 )
@@ -95,92 +96,92 @@ class haproxyCollector(object):
             metrics['server_id'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_server_id',
                     'Haproxy stick table key server association id',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['exp'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_expiry_milliseconds',
                     'Haproxy stick table key expires in ms',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['use'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_use',
                     'HAProxy stick table key use',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['gpc'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_gpc',
                     'Haproxy stick table key general purpose counter',
-                    labels=["table", "key", "region", "index"]),
+                    labels=["table", "key", "region", "app", "index"]),
                     'valuetype': int}
             metrics['gpc_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_gpc_rate',
                     'Haproxy stick table key general purpose counter rate',
-                    labels=["table", "key", "period", "region", "index"]),
+                    labels=["table", "key", "period", "region", "app", "index"]),
                     'valuetype': int}
             metrics['conn_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_conn_total',
                     'Haproxy stick table key connection counter',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['conn_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_conn_rate',
                     'Haproxy stick table key connection rate',
-                    labels=["table", "key", "period", "region"]),
+                    labels=["table", "key", "period", "region", "app"]),
                     'valuetype': int}
             metrics['conn_cur'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_conn_cur',
                     'Number of concurrent connection for a given key',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['sess_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_sess_total',
                     'Number of concurrent sessions for a given key',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['sess_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_sess_rate',
                     'Haproxy stick table key session rate',
-                    labels=["table", "key", "period", "region"]),
+                    labels=["table", "key", "period", "region", "app"]),
                     'valuetype': int}
             metrics['http_req_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_http_req_total',
                     'Haproxy stick table key http request counter',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['http_req_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_http_req_rate',
                     'Haproxy stick table key http request rate',
-                    labels=["table", "key", "period", "region"]),
+                    labels=["table", "key", "period", "region", "app"]),
                     'valuetype': int}
             metrics['http_err_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_http_err_total',
                     'Haproxy stick table key http error counter',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['http_err_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_http_err_rate',
                     'Haproxy stick table key http error rate',
-                    labels=["table", "key", "period", "region"]),
+                    labels=["table", "key", "period", "region", "app"]),
                     'valuetype': int}
             metrics['bytes_in_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_bytes_in_total',
                     'Haproxy stick table key bytes in counter',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['bytes_in_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_bytes_in_rate',
                     'Haproxy stick table key bytes in rate',
-                    labels=["table", "key", "period", "region"]),
+                    labels=["table", "key", "period", "region", "app"]),
                     'valuetype': int}
             metrics['bytes_out_cnt'] = {'family': CounterMetricFamily(
                     'haproxy_stick_table_key_bytes_out_total',
                     'Haproxy stick table key bytes out counter',
-                    labels=["table", "key", "region"]),
+                    labels=["table", "key", "region", "app"]),
                     'valuetype': int}
             metrics['bytes_out_rate'] = {'family': GaugeMetricFamily(
                     'haproxy_stick_table_key_bytes_out_rate',
                     'Haproxy stick table key bytes out rate',
-                    labels=["table", "key", "period", "region"]),
+                    labels=["table", "key", "period", "region", "app"]),
                     'valuetype': int}
 
             for metric in metrics.items():
@@ -195,10 +196,10 @@ class haproxyCollector(object):
         metric = GaugeMetricFamily(
             'haproxy_stick_table_used_size',
             'HAProxy stick tables entries in use',
-            labels=["table", "region"])
+            labels=["table", "region", "app"])
 
         for table in tables:
-            metric.add_metric([table['table'], self.region], int(table['used']))
+            metric.add_metric([table['table'], self.region, self.app], int(table['used']))
 
         return metric
 
@@ -206,10 +207,10 @@ class haproxyCollector(object):
         metric = GaugeMetricFamily(
             'haproxy_stick_table_max_size',
             'HAProxy stick table maximum entries',
-            labels=["table", "region"])
+            labels=["table", "region", "app"])
 
         for table in tables:
-            metric.add_metric([table['table'], self.region], int(table['size']))
+            metric.add_metric([table['table'], self.region, self.app], int(table['size']))
 
         return metric
 
@@ -217,7 +218,7 @@ class haproxyCollector(object):
         metric = GaugeMetricFamily(
             'haproxy_stick_table_rate_condition',
             'Stick table rate condition',
-            labels=["table", "type", "action", "region"])
+            labels=["table", "type", "action", "region", "app"])
 
         try:
             for table in ratelimit_conditions:
@@ -227,7 +228,8 @@ class haproxyCollector(object):
                             table,
                             table_type,
                             ratelimit_conditions[table][table_type]['action'],
-                            self.region
+                            self.region,
+                            self.app
                         ],
                         int(ratelimit_conditions[table][table_type]['value'])
                     )
@@ -416,6 +418,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--stats-socket')
     parser.add_argument('-c', '--config', default='/etc/haproxy/haproxy.cfg')
     parser.add_argument('-r', '--region', default='none')
+    parser.add_argument('-r', '--app', default='none')
     args = parser.parse_args()
 
     logging.info(
@@ -427,6 +430,7 @@ if __name__ == "__main__":
 
     config_path = args.config
     region = args.region
+    app = args.app
 
     if args.stats_socket is None:
         stats_socket = find_stats_socket(config_path)
@@ -437,7 +441,7 @@ if __name__ == "__main__":
         logging.fatal('Unable to find stats socket')
         sys.exit(1)
 
-    REGISTRY.register(haproxyCollector(stats_socket, config_path, region))
+    REGISTRY.register(haproxyCollector(stats_socket, config_path, region, app))
     start_http_server(addr=args.metrics_host, port=args.metrics_port)
     while True:
         try:
