@@ -418,7 +418,7 @@ if __name__ == "__main__":
     parser.add_argument('-s', '--stats-socket')
     parser.add_argument('-c', '--config', default='/etc/haproxy/haproxy.cfg')
     parser.add_argument('-r', '--region', default='none')
-    parser.add_argument('-r', '--app', default='none')
+    parser.add_argument('-n', '--app', default='none')
     args = parser.parse_args()
 
     logging.info(
